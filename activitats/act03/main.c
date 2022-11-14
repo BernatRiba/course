@@ -4,26 +4,27 @@
 #include <stdlib.h>
 
 #define SOTEXT ">ossh "
-void functionChoose(char token[], char command[]);
+void functionChoose(char token[], char command[], int counter);
 
 int main(int argc, char *argv[]){
     char command[100];
+    int counter = 0;
 
     printf("%s", &SOTEXT);
     scanf("%[^\n]", &command);
     fflush(stdin);
     
     while (strcmp(command, "exit") != 0) {
+
+        /* Dividim la línia de comandes en diferents "Tokens" i cridem la funció */
         char *token = strtok(command, ";");
 
         while (token != NULL) {
-            if (strstr(token, "<") != NULL || strstr(token, ">") != NULL || strstr(token, "|") != NULL || strstr(token, "&") != NULL ) {
-                printf("Not allowed operators [|><&] \n");
-            } else {
-                printf("%s", &token);
-                functionChoose(token, command);
-            }
+            
+            functionChoose(token, command, counter);
+            
             token = strtok(NULL, ";");
+            counter++;
         }
 
         printf("%s", &SOTEXT);
@@ -32,17 +33,22 @@ int main(int argc, char *argv[]){
     }
 }
 
-void functionChoose(char token[], char commands[]) {
+void functionChoose(char token[], char commands[], int counter) {
 
     if (strcmp(token, "ls") == 0) 
     {
-        DIR *d = opendir(".");
-        struct dirent *dentry;
-        size_t i=1;
+        if (strstr(token, "<") != NULL || strstr(token, ">") != NULL || strstr(token, "|") != NULL || strstr(token, "&") != NULL ) {
+                printf("Impossible to launch command %d:", &counter);
+                printf("ls: Not allowed operators [|><&] \n");
+        } else {
+            DIR *d = opendir(".");
+            struct dirent *dentry;
+            size_t i=1;
  
-        while((dentry=readdir(d))!=NULL)
-        {
-            printf("%u. %s\n", i, dentry->d_name);
+            while((dentry=readdir(d))!=NULL)
+            {
+                printf("%u. %s\n", i, dentry->d_name);
+            }
         }
     } 
 
