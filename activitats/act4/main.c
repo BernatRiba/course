@@ -1,60 +1,89 @@
+#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <stdlib.h>
 #include <unistd.h>
+#include <sys/types.h>
 #include <sys/wait.h>
-#include <sys/stat.h>
-#include <fcntl.h>
+#include <errno.h>
 
 int main()
 {
-    int fd[2], fd2;
+    int fd[2], fd1[2];
     pipe(fd);
-    char** args = malloc(2*sizeof(char*));
-    pid_t p1 = fork();
-    FILE *fileToWrite;
+    FILE *fileToWrite = ("user.txt", "a");
+    pid_t pid1, pid2, pid3;
 
-    for(int i=0; i<2; i++) {
-        args[i] = malloc(10*sizeof(char));
+    char *p1[] = {"whoami", NULL};
+    char *p2[] = {"cat", "/etc/passwd", NULL}; 
+    char *p3[] = {"grep", NULL};
+
+    if (pipe(fd)<0){
+        perror("Error de creació del pipe fd[]");
+        return EXIT_FAILURE;
+    }
+    if(pipe(fd1)<0){
+        perror("Error de creació del pipe fd1[]");
+        return EXIT_FAILURE;
     }
 
-    if (pipe(fd) < 0) perror("pipe fd");
+    pid1 = fork();
 
-    p1 = fork();
-
-    if(p1 == -1) {  
-        perror("fork");
+    if(pid1 == -1) {  
+        perror("fork 1");
         exit(1);
         return EXIT_FAILURE;
 
-    } else if (p1 == 0) {
+    } else if (pid1 == 0) {
 
         close(fd[0]);
 
-        dup2(fd[1], STDOUT_FILENO);
-        close(fd[1])
-
-        execlp("whoami", "ls", NULL);
+        dup2(fd[1],STDOUT_FILENO);
+        close(fd[1]);
+        
+        execvp(p1[0], p1);
 
         return EXIT_FAILURE;
+    }
 
-    } else if (p1 == 1) {
-        
-        fd2 = open("./user.txt", O_WRONLY);
+    pid2 = fork();
 
-        dup2(fd[0], STDIN_FILENO);
-        close(fd[0]);
+     if(pid2 == -1) {  
+        perror("fork 2");
+        exit(1);
+        return EXIT_FAILURE;
 
-        dup2(fd2, STDOUT_FILENO);
-        close(fd2);
+    } else if (pid2 == 0) {
+        close(fd1[0]);
 
-        strcpy(args[0],"grep");
+        dup2(fd1[1],STDOUT_FILENO);
+        close(fd1[1]);
 
-        execlp(args[0], " /etc/passwd",args, NULL);
+        execvp(p2[0], p2);
+
+        return EXIT_FAILURE;
+    }
+
+    pid3 = fork();
+
+     if(pid3 == -1) {  
+        perror("fork 3");
+        exit(1);
+        return EXIT_FAILURE;
+
+    } else if (pid3 == 0) {
+        dup2(fd1[0],STDIN_FILENO);
+        dup2(fileno(fileToWrite),STDOUT_FILENO);
+        close(fd1[1]);
+        close(fd1[0]);
+        execvp(p3[0], p3);
         return EXIT_FAILURE;
     }
     close(fd[0]);
     close(fd[1]);
-    waitpid(p1,0,0);
-    return EXIT_SUCCESS;
+    close(fd1[0]);
+    close(fd1[1]);
+    waitpid(pid1,0,0);
+    waitpid(pid2,0,0);
+    waitpid(pid3,0,0);
+
 }
