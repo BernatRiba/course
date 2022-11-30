@@ -8,7 +8,6 @@
 
 int main()
 {
-    // whoami | grep /etc/passwd
     int fd[2];
     FILE *fileToRead = ("/etc/passwd", "r");
     FILE *fileToWrite = ("user.txt", "a");
@@ -49,10 +48,11 @@ int main()
         return EXIT_FAILURE;
 
     } else if (pid2 == 0) {
+        char *paraula;
         dup2(fileno(fileToRead),STDIN_FILENO);
         dup2(fileno(fileToWrite),STDOUT_FILENO);
         close(fd[1]);
-        strcpy(read(),p2[1])
+        strcpy(read(fd[0], paraula, sizeof(paraula)), p2[1])
         close(fd[0]);
         execvp(p2[0], p2);
         return EXIT_FAILURE;
@@ -61,6 +61,5 @@ int main()
     close(fd[1]);
     waitpid(pid1,0,0);
     waitpid(pid2,0,0);
-
-
+    return EXIT_SUCCESS;
 }
