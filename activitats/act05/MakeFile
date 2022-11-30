@@ -1,0 +1,11 @@
+programa: main.o
+	gcc -o programa main.o
+
+run:
+	./programa
+
+test:
+	./test.sh
+
+clean:
+	rm -f programa *.o
