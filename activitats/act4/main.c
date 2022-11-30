@@ -8,21 +8,17 @@
 
 int main()
 {
-    int fd[2], fd1[2];
-    pipe(fd);
+    // whoami | grep /etc/passwd
+    int fd[2];
+    FILE *fileToRead = ("/etc/passwd", "r");
     FILE *fileToWrite = ("user.txt", "a");
-    pid_t pid1, pid2, pid3;
+    pid_t pid1, pid2;
 
     char *p1[] = {"whoami", NULL};
-    char *p2[] = {"cat", "/etc/passwd", NULL}; 
-    char *p3[] = {"grep", NULL};
+    char *p2[] = {"grep", NULL};
 
     if (pipe(fd)<0){
         perror("Error de creació del pipe fd[]");
-        return EXIT_FAILURE;
-    }
-    if(pipe(fd1)<0){
-        perror("Error de creació del pipe fd1[]");
         return EXIT_FAILURE;
     }
 
@@ -53,37 +49,18 @@ int main()
         return EXIT_FAILURE;
 
     } else if (pid2 == 0) {
-        close(fd1[0]);
-
-        dup2(fd1[1],STDOUT_FILENO);
-        close(fd1[1]);
-
-        execvp(p2[0], p2);
-
-        return EXIT_FAILURE;
-    }
-
-    pid3 = fork();
-
-     if(pid3 == -1) {  
-        perror("fork 3");
-        exit(1);
-        return EXIT_FAILURE;
-
-    } else if (pid3 == 0) {
-        dup2(fd1[0],STDIN_FILENO);
+        dup2(fileno(fileToRead),STDIN_FILENO);
         dup2(fileno(fileToWrite),STDOUT_FILENO);
-        close(fd1[1]);
-        close(fd1[0]);
-        execvp(p3[0], p3);
+        close(fd[1]);
+        strcpy(read(),p2[1])
+        close(fd[0]);
+        execvp(p2[0], p2);
         return EXIT_FAILURE;
     }
     close(fd[0]);
     close(fd[1]);
-    close(fd1[0]);
-    close(fd1[1]);
     waitpid(pid1,0,0);
     waitpid(pid2,0,0);
-    waitpid(pid3,0,0);
+
 
 }
